@@ -29,14 +29,15 @@ function afterConnection() {
 			];
 			list.push(item)
 		}
-		console.log("\n-------------------\n");
+
 		console.table(["Item ID", "Products", "Price"], list);
-		console.log("-----------------------------------");
-		selectItem();
+
+
+		chooseItem();
 	});
 }
 
-function selectItem() {
+function chooseItem() {
 	connection.query("SELECT * FROM products", function (err, results) {
 		if (err) throw err;
 		inquirer
@@ -81,23 +82,23 @@ function selectItem() {
 							if (error) throw err;
 						}
 					);
-					console.log("\n-----------------------\n");
 					console.log("Your Order for " + answer.amount + " " + chosenItem.product_name + " has been processed! Your total is: $" + total);
 					console.log("\n-------------------\n");
-					// console.log("Inventory has been adjusted. The new stock quantity is: " + revisedStock);
 				}
 				else {
 					console.log("\n-----------------------\n");
-					console.log("Insufficient quantity!");
+					console.log("There's not enough of that item.");
 					console.log("\n-------------------\n");
 				}
-				runOptions();
+				runInquire();
 			}
 			)
 	});
 }
 
-function runOptions() {
+
+
+function runInquire() {
 	inquirer
 		.prompt([
 			{
@@ -109,7 +110,7 @@ function runOptions() {
 		]).then(function (answer) {
 			switch (answer.options) {
 				case "Place Another Order":
-					selectItem();
+					chooseItem();
 					break;
 				case "Exit":
 					exit();
