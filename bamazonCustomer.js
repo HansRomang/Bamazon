@@ -9,13 +9,16 @@ var connection = mysql.createConnection({
 	database: "bamazon_db"
 });
 
+
 connection.connect(function (err) {
 	if (err) throw err;
 	console.log("connected as id " + connection.threadId);
-	afterConnection();
+	actualConnection();
 });
 
-function afterConnection() {
+
+function actualConnection() {
+
 	connection.query("SELECT * FROM products", function (err, res) {
 
 		if (err) throw err;
@@ -33,38 +36,48 @@ function afterConnection() {
 		console.table(["Item ID", "Products", "Price"], list);
 
 
-		chooseItem();
+		decideItem();
 	});
+
 }
 
-function chooseItem() {
+function decideItem() {
+
 	connection.query("SELECT * FROM products", function (err, results) {
+
 		if (err) throw err;
+
 		inquirer
 			.prompt([
 				{
-					name: "choice",
+					name: "itemchoice",
 					type: "input",
-					message: "Which item would you like to purchase (by ID)?"
+					message: "Please input the item ID for what you'd like to purchase (1-10)"
 				},
 				{
 					name: "amount",
 					type: "input",
-					message: "How many would you like to buy?"
+					message: "How much of this item would you like to purchase?"
 				}
 			]).then(function (answer) {
+
 				var chosenItem;
+
 				for (var i = 0; i < results.length; i++) {
-					if (results[i].item_id === parseInt(answer.choice)) {
+					
+					if (results[i].item_id === parseInt(answer.itemchoice)) {
 						chosenItem = results[i];
-						// console.log(results[i].product_name);
-						// console.log(answer.amount);
+
 					}
 				}
 				if (chosenItem.stock_quantity > parseInt(answer.amount)) {
+
 					var revisedStock = chosenItem.stock_quantity - answer.amount;
+
 					var total = parseFloat(answer.amount * chosenItem.price);
+
 					var sales = chosenItem.product_sales + total;
+
 					connection.query(
 						"UPDATE products SET ?, ? WHERE ?",
 						[
@@ -82,13 +95,10 @@ function chooseItem() {
 							if (error) throw err;
 						}
 					);
-					console.log("Your Order for " + answer.amount + " " + chosenItem.product_name + " has been processed! Your total is: $" + total);
-					console.log("\n-------------------\n");
+					console.log("Your Order " + answer.amount + " " + chosenItem.product_name + " has been purchased! Total: $" + total);
 				}
 				else {
-					console.log("\n-----------------------\n");
 					console.log("There's not enough of that item.");
-					console.log("\n-------------------\n");
 				}
 				runInquire();
 			}
@@ -105,12 +115,12 @@ function runInquire() {
 				name: "options",
 				type: "rawlist",
 				message: "What would you like to do next?",
-				choices: ["Place Another Order", "Exit"]
+				choices: ["Place More Orders", "Exit"]
 			},
 		]).then(function (answer) {
 			switch (answer.options) {
 				case "Place Another Order":
-					chooseItem();
+					decideItem();
 					break;
 				case "Exit":
 					exit();
